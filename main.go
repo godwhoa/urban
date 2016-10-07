@@ -32,9 +32,10 @@ func clamp(n, high int) int {
 }
 
 /* Returns meanings and examples */
-func GetMeanings(word string, limit int) ([]string, []string) {
+func GetMeanings(word string, limit int) ([]string, []string, bool) {
 	var meanings []string
 	var examples []string
+	var hasresults = true
 	doc, err := goquery.NewDocument(`http://www.urbandictionary.com/define.php?term=` + word)
 	if err != nil {
 		log.Fatalf("Failed to fetch site.\n")
@@ -43,27 +44,31 @@ func GetMeanings(word string, limit int) ([]string, []string) {
 	doc.Find(".meaning").Each(func(i int, s *goquery.Selection) {
 		meanings = append(meanings, s.Text())
 	})
+
 	doc.Find(".example").Each(func(i int, s *goquery.Selection) {
 		examples = append(examples, s.Text())
 	})
 	if limit == -1 {
 		meanings, examples = meanings[:], examples[:]
-	} else {
+	} else if len(meanings) == len(examples) {
 		limit = clamp(limit, len(meanings))
 		meanings, examples = meanings[:limit], examples[:limit]
+	} else {
+		hasresults = false
 	}
-	return meanings, examples
+	return meanings, examples, hasresults
 }
 
 /* Parses commandline arguments and prints meanings */
 func ParseArg() {
 	var meanings []string
 	var examples []string
+	var hasresults bool
 
 	args, arglen := os.Args, len(os.Args)
 	if arglen == 2 {
 		// no limit
-		meanings, examples = GetMeanings(args[1], 1)
+		meanings, examples, hasresults = GetMeanings(args[1], 1)
 	} else if arglen == 3 {
 		// limit specified
 		var limit int
@@ -78,15 +83,18 @@ func ParseArg() {
 			}
 		}
 
-		meanings, examples = GetMeanings(args[1], limit)
+		meanings, examples, hasresults = GetMeanings(args[1], limit)
 	} else {
 		fmt.Printf(help)
 		return
 	}
-
-	for i := 0; i < len(meanings); i++ {
-		color.Blue("%d)\n", i+1)
-		fmt.Printf("%s%s%s%s\n", color.GreenString("Def:"), meanings[i], color.GreenString("Eg:"), examples[i])
+	if hasresults {
+		for i := 0; i < len(meanings); i++ {
+			color.Blue("%d)\n", i+1)
+			fmt.Printf("%s%s%s%s\n", color.GreenString("Def:"), meanings[i], color.GreenString("Eg:"), examples[i])
+		}
+	} else {
+		color.Red("No definitions.\n")
 	}
 }
 
