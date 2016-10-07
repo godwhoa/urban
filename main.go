@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/fatih/color"
 	"log"
 	"os"
 	"strconv"
@@ -84,8 +85,8 @@ func ParseArg() {
 	}
 
 	for i := 0; i < len(meanings); i++ {
-		fmt.Printf("\033[1;34m%d)\033[1;m\n", i+1)
-		fmt.Printf("Def:%s\nEg:%s\n", meanings[i], examples[i])
+		color.Blue("%d)\n", i+1)
+		fmt.Printf("%s%s%s%s\n", color.GreenString("Def:"), meanings[i], color.GreenString("Eg:"), examples[i])
 	}
 }
 
