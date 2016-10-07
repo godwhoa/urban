@@ -1,7 +1,9 @@
 # A cli tool for urban dictionary 
 
 ## Install
-Just get the binaries in bin dir.
+Pre-compiled binaries in bin dir.<br>
+If you have Go installed and `$GOPATH` set then:
+`go get -v github.com/godwhoa/urban`
 
 ## Usage
 ```
