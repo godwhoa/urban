@@ -48,6 +48,7 @@ func GetMeanings(word string, limit int) ([]string, []string, bool) {
 	doc.Find(".example").Each(func(i int, s *goquery.Selection) {
 		examples = append(examples, s.Text())
 	})
+	// we use -1 to indicate we want all results
 	if limit == -1 {
 		meanings, examples = meanings[:], examples[:]
 	} else if len(meanings) == len(examples) {
@@ -65,6 +66,7 @@ func ParseArg() {
 	var examples []string
 	var hasresults bool
 
+	// argument parsing
 	args, arglen := os.Args, len(os.Args)
 	if arglen == 2 {
 		// no limit
@@ -85,9 +87,12 @@ func ParseArg() {
 
 		meanings, examples, hasresults = GetMeanings(args[1], limit)
 	} else {
+		// for invalid args.
 		fmt.Printf(help)
 		return
 	}
+
+	// only loop when it has results
 	if hasresults {
 		for i := 0; i < len(meanings); i++ {
 			color.Blue("%d)\n", i+1)
