@@ -82,14 +82,14 @@ func (r Results) print(limit int) {
 				color.Unset()
 
 				color.Set(color.FgGreen)
-				fmt.Printf("%s", "Def:")
+				fmt.Printf("%s\n", "Def:")
 				color.Unset()
 				fmt.Println(def.Definition)
 
 				color.Set(color.FgGreen)
-				fmt.Printf("%s", "Eg:")
+				fmt.Printf("%s\n", "Eg:")
 				color.Unset()
-				fmt.Println(def.Example)
+				fmt.Printf("%s\n\n", def.Example)
 				i++
 			}
 		}
