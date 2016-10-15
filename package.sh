@@ -10,6 +10,16 @@ env GOOS=freebsd GOARCH=386 go build -o bin/urban_freebsd32
 env GOOS=freebsd GOARCH=amd64 go build -o bin/urban_freebsd64
 echo "Freebsd build done."
 
+# Openbsd
+env GOOS=openbsd GOARCH=386 go build -o bin/urban_openbsd32
+env GOOS=openbsd GOARCH=amd64 go build -o bin/urban_openbsd64
+echo "Openbsd build done."
+
+# Netbsd
+env GOOS=netbsd GOARCH=386 go build -o bin/urban_netbsd32
+env GOOS=netbsd GOARCH=amd64 go build -o bin/urban_netbsd64
+echo "Netbsd build done."
+
 # Mac
 env GOOS=darwin GOARCH=386 go build -o bin/urban_darwin32
 env GOOS=darwin GOARCH=amd64 go build -o bin/urban_darwin64
