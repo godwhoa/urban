@@ -42,15 +42,6 @@ type Results struct {
 
 const api_endpoint = "http://api.urbandictionary.com/v0/define?term="
 
-/* Prevent going above highest limit */
-func clamp(n, high int) int {
-	if n > high {
-		return high
-	} else {
-		return n
-	}
-}
-
 /* Fetches results */
 func GetResults(word string) Results {
 	//get json data
