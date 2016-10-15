@@ -99,34 +99,6 @@ func (r Results) print(limit int) {
 	}
 }
 
-func PrintMeanings(meaning_map map[string]string, limit int) {
-	var i = 0
-	for def, eg := range meaning_map {
-		if limit == -1 || i < limit {
-			// ugly code for windows!
-			color.Set(color.FgBlue)
-			fmt.Printf("%d)\n", i+1)
-			color.Unset()
-
-			color.Set(color.FgGreen)
-			fmt.Printf("%s\n", "Def:")
-			color.Unset()
-			fmt.Println(def)
-
-			color.Set(color.FgGreen)
-			fmt.Printf("%s\n", "Eg:")
-			color.Unset()
-			fmt.Println(eg)
-			i++
-		} else {
-			fmt.Println(def, eg)
-			fmt.Println((limit == -1 || i < limit), limit, i)
-			color.Red("No definitions.\n")
-			return
-		}
-	}
-}
-
 /* Parses commandline arguments and prints meanings */
 func ParseArg() {
 	var limit int
