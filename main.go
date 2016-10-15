@@ -1,12 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
-	"github.com/fatih/color"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
+
+	"github.com/fatih/color"
 )
 
 const help = `Usage:
@@ -20,7 +23,24 @@ urban [word] [limit]
 urban [word] all
 `
 
-/* If statement spaghetti from here on down. */
+type Results struct {
+	Tags       []string `json:"tags"`
+	ResultType string   `json:"result_type"`
+	List       []struct {
+		Definition  string `json:"definition"`
+		Permalink   string `json:"permalink"`
+		ThumbsUp    int    `json:"thumbs_up"`
+		Author      string `json:"author"`
+		Word        string `json:"word"`
+		Defid       int    `json:"defid"`
+		CurrentVote string `json:"current_vote"`
+		Example     string `json:"example"`
+		ThumbsDown  int    `json:"thumbs_down"`
+	} `json:"list"`
+	Sounds []string `json:"sounds"`
+}
+
+const api_endpoint = "http://api.urbandictionary.com/v0/define?term="
 
 /* Prevent going above highest limit */
 func clamp(n, high int) int {
@@ -31,49 +51,92 @@ func clamp(n, high int) int {
 	}
 }
 
-/* Returns meanings and examples */
-func GetMeanings(word string, limit int) ([]string, []string, bool) {
-	var meanings []string
-	var examples []string
-	var hasresults = true
-	doc, err := goquery.NewDocument(`http://www.urbandictionary.com/define.php?term=` + word)
+/* Fetches results */
+func GetResults(word string) Results {
+	//get json data
+	res, err := http.Get(api_endpoint + word)
 	if err != nil {
-		log.Fatalf("Failed to fetch site.\n")
+		log.Fatalf("Failed to fetch api.")
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Fatalf("err: %v", err)
 	}
 
-	doc.Find(".meaning").Each(func(i int, s *goquery.Selection) {
-		meanings = append(meanings, s.Text())
-	})
+	//unmarshal json
+	results := Results{}
+	json.Unmarshal(body, &results)
+	return results
+}
 
-	doc.Find(".example").Each(func(i int, s *goquery.Selection) {
-		examples = append(examples, s.Text())
-	})
-	// we use -1 to indicate we want all results
-	if limit == -1 {
-		meanings, examples = meanings[:], examples[:]
-	} else if len(meanings) == len(examples) {
-		limit = clamp(limit, len(meanings))
-		meanings, examples = meanings[:limit], examples[:limit]
+func (r Results) print(limit int) {
+	i := 0
+	if r.ResultType == "exact" {
+		for _, def := range r.List {
+			if limit == -1 || i < limit {
+				// ugly code for windows!
+				color.Set(color.FgBlue)
+				fmt.Printf("%d)\n", i+1)
+				color.Unset()
+
+				color.Set(color.FgGreen)
+				fmt.Printf("%s", "Def:")
+				color.Unset()
+				fmt.Println(def.Definition)
+
+				color.Set(color.FgGreen)
+				fmt.Printf("%s", "Eg:")
+				color.Unset()
+				fmt.Println(def.Example)
+				i++
+			}
+		}
 	} else {
-		hasresults = false
+		color.Red("No definitions.\n")
+		return
 	}
-	return meanings, examples, hasresults
+}
+
+func PrintMeanings(meaning_map map[string]string, limit int) {
+	var i = 0
+	for def, eg := range meaning_map {
+		if limit == -1 || i < limit {
+			// ugly code for windows!
+			color.Set(color.FgBlue)
+			fmt.Printf("%d)\n", i+1)
+			color.Unset()
+
+			color.Set(color.FgGreen)
+			fmt.Printf("%s\n", "Def:")
+			color.Unset()
+			fmt.Println(def)
+
+			color.Set(color.FgGreen)
+			fmt.Printf("%s\n", "Eg:")
+			color.Unset()
+			fmt.Println(eg)
+			i++
+		} else {
+			fmt.Println(def, eg)
+			fmt.Println((limit == -1 || i < limit), limit, i)
+			color.Red("No definitions.\n")
+			return
+		}
+	}
 }
 
 /* Parses commandline arguments and prints meanings */
 func ParseArg() {
-	var meanings []string
-	var examples []string
-	var hasresults bool
-
+	var limit int
 	// argument parsing
 	args, arglen := os.Args, len(os.Args)
 	if arglen == 2 {
 		// no limit
-		meanings, examples, hasresults = GetMeanings(args[1], 1)
+		limit = 1
 	} else if arglen == 3 {
 		// limit specified
-		var limit int
 		var err error
 		// int or all
 		if args[2] == "all" {
@@ -84,23 +147,13 @@ func ParseArg() {
 				fmt.Println("Limit should be a number.")
 			}
 		}
-
-		meanings, examples, hasresults = GetMeanings(args[1], limit)
 	} else {
 		// for invalid args.
 		fmt.Printf(help)
 		return
 	}
-
-	// only loop when it has results
-	if hasresults {
-		for i := 0; i < len(meanings); i++ {
-			color.Blue("%d)\n", i+1)
-			fmt.Printf("%s%s%s%s\n", color.GreenString("Def:"), meanings[i], color.GreenString("Eg:"), examples[i])
-		}
-	} else {
-		color.Red("No definitions.\n")
-	}
+	results := GetResults(args[1])
+	results.print(limit)
 }
 
 func main() {
